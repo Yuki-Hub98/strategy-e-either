@@ -1,0 +1,45 @@
+version: '3.9'
+
+networks:
+  commercial:
+    driver: bridge
+
+services:
+  app:
+    build: .
+    container_name: commercial-api
+    environment:
+      DB_HOST: commercial-mysql
+      DB_PORT: "${DB_PORT}"
+      DB_USER: "${DB_USERNAME}"
+      DB_PASSWORD: "${DB_PASSWORD}"
+      DB_DATABASE: "${DB_NAME}"
+    networks:
+      - commercial
+    ports:
+      - "${PORT}:${PORT}"
+    depends_on:
+      - commercial-mysql
+
+  commercial-mysql:
+    image: mysql:latest
+    container_name: mysql-commercial
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: "${MYSQL_ROOT_PASSWORD}"
+      MYSQL_DATABASE: "${DB_NAME}"
+      MYSQL_USER: "${DB_USERNAME}"
+      MYSQL_PASSWORD: "${DB_PASSWORD}"
+    ports:
+      - "3307:3306"
+    networks:
+      - commercial
+    volumes:
+      - ./docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d
+      - db_data:/var/lib/mysql
+    command: ["--init-file", "/docker-entrypoint-initdb.d/init.sql"]
+    
+volumes:
+  db_data:
+    driver: local
+
